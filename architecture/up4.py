@@ -3,7 +3,7 @@ import tensorflow as tf
 import tensorlayer as tl
 
 
-def zipper(x, input_x, input_y,  act=lambda x : tl.act.lrelu(x, 0.1), reuse = False, name = 'zipper', is_train=True,
+def zipper(x, input_x, input_y, act=tf.nn.leaky_relu, reuse = False, name = 'zipper', is_train=True,
            observations=6, downscale=4):
 
     res3d_map = 6
@@ -13,12 +13,12 @@ def zipper(x, input_x, input_y,  act=lambda x : tl.act.lrelu(x, 0.1), reuse = Fa
     with tf.variable_scope(name, reuse=reuse):
         tl.layers.set_name_reuse(reuse)
         network = tl.layers.InputLayer(x, name='input_layer' )
-        network = LayerExtension.TransposeLayer(network, (0, 2, 3, 1), name='trans')
+        network = tl.layers.TransposeLayer(network, (0, 2, 3, 1), name='trans')
 
         ## Downsample
         network = tl.layers.PoolLayer(network, ksize=[1,  downscale, downscale, 1], strides=[1, downscale, downscale,1],
                                       padding='VALID', pool=tf.nn.avg_pool, name='pool_layer')
-        network = LayerExtension.TransposeLayer(network, (0, 3, 1, 2), name='trans2')
+        network = tl.layers.TransposeLayer(network, (0, 3, 1, 2), name='trans2')
         network = tl.layers.ReshapeLayer(network, shape=(-1, observations, input_x/downscale,
                                                          input_y/downscale, 1), name='reshape')
         ## 3D-upscale module

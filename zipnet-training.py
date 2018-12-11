@@ -1,8 +1,8 @@
 import toolbox.NetFlow as nf
+from toolbox import DataProvider
 import tensorflow as tf
 import tensorlayer as tl
 import numpy as np
-from toolbox import DataProvider
 import argparse
 import toolbox.CostFunc as lost
 
@@ -141,7 +141,7 @@ if args.downscale == 'mix':
     from architecture.mix import zipper
 
 
-network = zipper(x, downscale, args.input_x, args.input_y,  is_train=True, observation=args.observations)
+network = zipper(x, args.input_x, args.input_y,  is_train=True, observation=args.observations, downscale = downscale)
 y = network.outputs
 cost = tl.cost.mean_squared_error(y, y_)
 train_params = network.all_params

@@ -183,7 +183,7 @@ if args.downscale == 'mix':
     from architecture.mix import zipper
 
 
-G = zipper(g_x)
+G = zipper(x, args.input_x, args.input_y,  is_train=True, observation=args.observations, downscale = downscale)
 D = discriminator(d_x, reuse=False)
 D_generate = discriminator(G.outputs, reuse=True)
 

@@ -31,7 +31,7 @@ def zipper(x, input_x, input_y,  act=lambda x : tl.act.lrelu(x, 0.1), reuse=Fals
         network = tl.layers.BatchNormLayer(network, name='3d_bn2', act=act, is_train=is_train)
 
         ## adjustments
-        network = LayerExtension.TransposeLayer(network, (0, 2, 3, 1, 4), name='trans3')
+        network = tl.layers.TransposeLayer(network, (0, 2, 3, 1, 4), name='trans3')
         network = tl.layers.ReshapeLayer(network, shape=(-1, input_x, input_y, observations * res3d_map), name='reshape2')
         network = tl.layers.Conv2dLayer(network, shape=[4, 4, observations * res3d_map, res2d_map],
                                         strides=[1, 1, 1, 1], padding='SAME', name='cnn2d_layer_2d_ini1')

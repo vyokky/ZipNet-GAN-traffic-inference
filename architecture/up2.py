@@ -3,30 +3,34 @@ import tensorflow as tf
 import tensorlayer as tl
 
 
-def zipper(x, act=lambda x: tl.act.lrelu(x, 0.1), reuse=False, name='zipper', is_train=True, observation = 6):
+def zipper(x, input_x, input_y, act=tf.nn.leaky_relu, reuse=False, name='zipper', is_train=True, observations = 6):
+
+    res3d_map = 6
+    res2d_map = 36
+    temporal_stride = min(observations, 3)
 
     with tf.variable_scope(name, reuse=reuse):
         tl.layers.set_name_reuse(reuse)
         network = tl.layers.InputLayer(x, name='input_layer')
-        network = LayerExtension.TransposeLayer(network, (0, 2, 3, 1), name='trans')
+        network = tl.layers.TransposeLayer(network, (0, 2, 3, 1), name='trans')
 
         ## Downsample
         network = tl.layers.PoolLayer(network, ksize=[1, downscale, downscale, 1], strides=[1, downscale, downscale, 1],
                                       padding='VALID',
                                       pool=tf.nn.avg_pool, name='pool_layer')
-        network = LayerExtension.TransposeLayer(network, (0, 3, 1, 2), name='trans2')
-        network = tl.layers.ReshapeLayer(network, shape=(-1, observations, 80 / downscale, 80 / downscale, 1),
+        network = tl.layers.TransposeLayer(network, (0, 3, 1, 2), name='trans2')
+        network = tl.layers.ReshapeLayer(network, shape=(-1, observations, input_x / downscale, input_y / downscale, 1),
                                          name='reshape')
         ## 3D-upscale module
         network = LayerExtension.DeConv3dLayer(layer=network, shape=[1, 3, 3, res3d_map, 1],
-                                               output_shape=[-1, 6, 80, 80, res3d_map],
+                                               output_shape=[-1, 6, input_x, input_y, res3d_map],
                                                strides=[1, 1, 2, 2, 1], padding='SAME', name='decnn3d_layer1')
         network = tl.layers.BatchNormLayer(network, name='3d_bn1', act=act, is_train=is_train)
-        network = tl.layers.Conv3dLayer(network, shape=[3, 3, 3, res3d_map, res3d_map],
+        network = tl.layers.Conv3dLayer(network, shape=[temporal_stride, 3, 3, res3d_map, res3d_map],
                                         strides=[1, 1, 1, 1, 1], padding='SAME', name='cnn3d_layer1', act=act)
-        network = tl.layers.Conv3dLayer(network, shape=[3, 3, 3, res3d_map, res3d_map],
+        network = tl.layers.Conv3dLayer(network, shape=[temporal_stride, 3, 3, res3d_map, res3d_map],
                                         strides=[1, 1, 1, 1, 1], padding='SAME', name='cnn3d_layer2', act=act)
-        network = tl.layers.Conv3dLayer(network, shape=[3, 3, 3, res3d_map, res3d_map],
+        network = tl.layers.Conv3dLayer(network, shape=[temporal_stride, 3, 3, res3d_map, res3d_map],
                                         strides=[1, 1, 1, 1, 1], padding='SAME', name='cnn3d_layer3', act=act)
 
         ## adjustments

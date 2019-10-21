@@ -1,3 +1,4 @@
+import sys
 import LayerExtension
 import tensorflow as tf
 import tensorlayer as tl
